@@ -1,0 +1,61 @@
+{
+  "certificate_template": {
+    "metadata": {
+      "theme_colors": ["Navy Blue", "Gold", "White"],
+      "layout": "Landscape"
+    },
+    "logos": [
+      {
+        "position": "top_left",
+        "entity": "AI Innovation Society"
+      },
+      {
+        "position": "top_right",
+        "entity": "Department of Artificial Intelligence",
+        "institution": "Shifa Tameer-e-Millat University",
+        "text_on_logo": "Department of Artificial Intelligence - Shifa Tameer-e-Millat University"
+      }
+    ],
+    "header": {
+      "title": "CERTIFICATE",
+      "subtitle": "OF PARTICIPATION",
+      "styles": {
+        "title_color": "Blue",
+        "subtitle_color": "Gold"
+      }
+    },
+    "recipient_section": {
+      "intro_text": "THIS CERTIFICATE IS AWARDED TO",
+      "placeholder": "[Participant Name]",
+      "placeholder_style": {
+        "font_type": "Script/Cursive",
+        "color": "Gold",
+        "decoration": "Underline"
+      }
+    },
+    "event_details": {
+      "text_template": "For participating in the event \"[Event name]\" Hosted by AI Innovation Society of the Department of Artificial Intelligence (STMU), on [Date]",
+      "placeholders": [
+        "Event name",
+        "Date"
+      ]
+    },
+    "signatories": [
+      {
+        "position": "left",
+        "name": "Dr. Hufsa Mohsin",
+        "designation": "HOD, Department Of Artificial Intelligence"
+      },
+      {
+        "position": "center",
+        "name": "Sudais Khalid",
+        "designation": "Presedent, AI Innovation Society"
+      },
+      {
+        "position": "right",
+        "name": "Muhammad Tahir",
+        "designation": "Head, AI Innovation Society"
+      }
+    ]
+  }
+}

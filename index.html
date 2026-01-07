@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Innovation Society — Certificate Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- jsPDF Library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-logo">
+                    <img src="aiinnovationsociety_logo.png" alt="AI Innovation Society Logo" class="logo-img">
+                </div>
+                <div class="header-text">
+                    <h1>AI Innovation Society</h1>
+                    <p class="subtitle">Certificate Generator</p>
+                    <p class="department">Department of Artificial Intelligence — STMU</p>
+                </div>
+                <div class="header-logo">
+                    <img src="Department of Ai logo (1).png" alt="Department of AI Logo" class="logo-img">
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Form Section -->
+            <section class="form-section">
+                <h2>Certificate Details</h2>
+                <form id="certificateForm" novalidate>
+                    <!-- Participant Name -->
+                    <div class="form-group">
+                        <label for="participantName">Participant Name <span class="required">*</span></label>
+                        <input type="text" id="participantName" name="participantName" placeholder="Enter full name" required>
+                        <span class="error-message" id="participantNameError"></span>
+                    </div>
+
+                    <!-- Event Name -->
+                    <div class="form-group">
+                        <label for="eventName">Event Name <span class="required">*</span></label>
+                        <input type="text" id="eventName" name="eventName" placeholder="Enter event name" required>
+                        <span class="error-message" id="eventNameError"></span>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="form-group">
+                        <label for="eventDate">Date <span class="required">*</span></label>
+                        <input type="date" id="eventDate" name="eventDate" required>
+                        <span class="error-message" id="eventDateError"></span>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="generateBtn">
+                            <span class="btn-icon"></span> Generate Certificate
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section">
+                <h2>Certificate Preview</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="certificateCanvas"></canvas>
+                    <div class="placeholder-message" id="placeholderMessage">
+                        <span class="placeholder-icon"></span>
+                        <p>Fill in the form and click "Generate Certificate" to preview</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="preview-actions">
+                    <button type="button" class="btn btn-success" id="downloadPdfBtn" disabled>
+                        <span class="btn-icon"></span> Download PDF
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="printBtn" disabled>
+                        <span class="btn-icon"></span> Print Certificate
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 AI Innovation Society. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
