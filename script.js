@@ -269,6 +269,167 @@ function attachEventListeners() {
     
     // Real-time participant name validation
     elements.participantName.addEventListener('input', debounce(validateParticipantName, 500));
+    
+    // Autocomplete functionality for participant name
+    setupAutocomplete();
+}
+
+// ========================================
+// AUTOCOMPLETE FUNCTIONALITY
+// ========================================
+
+// Track highlighted suggestion index for keyboard navigation
+let highlightedIndex = -1;
+
+/**
+ * Setup autocomplete for participant name input
+ */
+function setupAutocomplete() {
+    const input = elements.participantName;
+    const dropdown = document.getElementById('suggestionsDropdown');
+    
+    if (!input || !dropdown) return;
+    
+    // Show suggestions on input
+    input.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length >= 2) {
+            showSuggestions(query, dropdown);
+        } else {
+            hideSuggestions(dropdown);
+        }
+    });
+    
+    // Handle keyboard navigation
+    input.addEventListener('keydown', function(e) {
+        const items = dropdown.querySelectorAll('.suggestion-item');
+        
+        if (!dropdown.classList.contains('active') || items.length === 0) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+            updateHighlight(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightedIndex = Math.max(highlightedIndex - 1, 0);
+            updateHighlight(items);
+        } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+            e.preventDefault();
+            selectSuggestion(items[highlightedIndex].dataset.name);
+            hideSuggestions(dropdown);
+        } else if (e.key === 'Escape') {
+            hideSuggestions(dropdown);
+        }
+    });
+    
+    // Hide on focus out (with delay to allow click)
+    input.addEventListener('blur', function() {
+        setTimeout(() => hideSuggestions(dropdown), 200);
+    });
+    
+    // Show on focus if there's a query
+    input.addEventListener('focus', function() {
+        const query = this.value.trim();
+        if (query.length >= 2) {
+            showSuggestions(query, dropdown);
+        }
+    });
+}
+
+/**
+ * Show filtered suggestions in dropdown
+ */
+function showSuggestions(query, dropdown) {
+    const queryLower = query.toLowerCase();
+    
+    // Get original names from CSV (we need to re-parse or store originals)
+    // For now, filter from participantsList and capitalize
+    const matches = participantsList
+        .filter(name => name.includes(queryLower))
+        .slice(0, 8) // Limit to 8 suggestions
+        .map(name => capitalizeWords(name)); // Capitalize for display
+    
+    highlightedIndex = -1; // Reset highlight
+    
+    if (matches.length === 0) {
+        dropdown.innerHTML = '<div class="no-suggestions">No matching participants found</div>';
+    } else {
+        dropdown.innerHTML = matches.map((name, index) => {
+            // Highlight the matching part
+            const highlightedName = highlightMatch(name, query);
+            return `<div class="suggestion-item" data-name="${name}" data-index="${index}">${highlightedName}</div>`;
+        }).join('');
+        
+        // Add click handlers to suggestions
+        dropdown.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                selectSuggestion(this.dataset.name);
+                hideSuggestions(dropdown);
+            });
+            
+            item.addEventListener('mouseenter', function() {
+                highlightedIndex = parseInt(this.dataset.index);
+                updateHighlight(dropdown.querySelectorAll('.suggestion-item'));
+            });
+        });
+    }
+    
+    dropdown.classList.add('active');
+}
+
+/**
+ * Highlight matching text in suggestion
+ */
+function highlightMatch(text, query) {
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return text.replace(regex, '<span class="match">$1</span>');
+}
+
+/**
+ * Escape special regex characters
+ */
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Capitalize each word
+ */
+function capitalizeWords(str) {
+    return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+/**
+ * Update highlighted suggestion styling
+ */
+function updateHighlight(items) {
+    items.forEach((item, index) => {
+        if (index === highlightedIndex) {
+            item.classList.add('highlighted');
+        } else {
+            item.classList.remove('highlighted');
+        }
+    });
+}
+
+/**
+ * Select a suggestion and fill the input
+ */
+function selectSuggestion(name) {
+    elements.participantName.value = name;
+    // Trigger validation
+    validateParticipantName();
+}
+
+/**
+ * Hide suggestions dropdown
+ */
+function hideSuggestions(dropdown) {
+    dropdown.classList.remove('active');
+    dropdown.innerHTML = '';
+    highlightedIndex = -1;
 }
 
 /**
