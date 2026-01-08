@@ -213,6 +213,27 @@ body {
     min-height: 20px;
 }
 
+/* Validation Status */
+.validation-status {
+    display: block;
+    font-size: 0.85rem;
+    margin-top: 6px;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.validation-status.valid {
+    color: #16a34a;
+}
+
+.validation-status.invalid {
+    color: #dc2626;
+}
+
+.validation-status.loading {
+    color: #64748b;
+}
+
 /* Form Actions */
 .form-actions {
     margin-top: 30px;

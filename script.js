@@ -36,6 +36,11 @@ const CONFIG = {
         eventLine2: {
             x: 1754,
             y: 1570   // Moved lower
+        },
+        // Serial number - Bottom right corner
+        serialNumber: {
+            x: 3350,
+            y: 2380
         }
     },
     
@@ -107,6 +112,12 @@ const CONFIG = {
             weight: 'normal',
             family: 'Courier New, monospace',
             color: '#94a3b8'
+        },
+        serialNumber: {
+            size: 32,
+            weight: 'bold',
+            family: 'Consolas, Courier New, monospace',
+            color: '#1e3a5f'
         }
     },
     
@@ -154,6 +165,13 @@ const ctx = elements.canvas.getContext('2d');
 let certificateGenerated = false;
 let backgroundImageLoaded = false;
 let backgroundImage = new Image();
+let participantsList = []; // List of valid participants from CSV
+
+// CSV Configuration
+const CSV_CONFIG = {
+    fileName: 'AIS Event Joining Participant.csv',
+    nameColumnIndex: 2  // Column C (0-indexed)
+};
 
 // ========================================
 // INITIALIZATION
@@ -170,11 +188,38 @@ function init() {
     // Load background image
     loadBackgroundImage();
     
+    // Load participants list from CSV
+    loadParticipantsList();
+    
     // Attach event listeners
     attachEventListeners();
     
     // Set default date to today
     setDefaultDate();
+}
+
+/**
+ * Load participants list from CSV file
+ */
+function loadParticipantsList() {
+    Papa.parse(CSV_CONFIG.fileName, {
+        download: true,
+        header: false,
+        skipEmptyLines: true,
+        complete: function(results) {
+            if (results.data && results.data.length > 1) {
+                // Skip header row, extract names from column C (index 2)
+                participantsList = results.data
+                    .slice(1) // Skip header
+                    .map(row => row[CSV_CONFIG.nameColumnIndex]?.trim().toLowerCase())
+                    .filter(name => name); // Remove empty names
+                console.log(`Loaded ${participantsList.length} participants from CSV`);
+            }
+        },
+        error: function(error) {
+            console.error('Error loading participants CSV:', error);
+        }
+    });
 }
 
 /**
@@ -221,6 +266,56 @@ function attachEventListeners() {
         input.addEventListener('blur', () => validateField(input));
         input.addEventListener('input', () => clearFieldError(input));
     });
+    
+    // Real-time participant name validation
+    elements.participantName.addEventListener('input', debounce(validateParticipantName, 500));
+}
+
+/**
+ * Debounce function to limit validation calls
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * Validate participant name in real-time
+ */
+function validateParticipantName() {
+    const name = elements.participantName.value.trim();
+    const validationStatus = document.getElementById('validationStatus');
+    
+    if (!validationStatus) return;
+    
+    if (name.length < 3) {
+        validationStatus.textContent = '';
+        validationStatus.className = 'validation-status';
+        return;
+    }
+    
+    if (participantsList.length === 0) {
+        validationStatus.textContent = '⏳ Loading participant list...';
+        validationStatus.className = 'validation-status loading';
+        return;
+    }
+    
+    if (isParticipantValid(name)) {
+        validationStatus.textContent = '✓ Registered participant';
+        validationStatus.className = 'validation-status valid';
+        elements.participantName.classList.remove('error');
+        document.getElementById('participantNameError').textContent = '';
+    } else {
+        validationStatus.textContent = '✗ Not registered - Please fill the registration form first';
+        validationStatus.className = 'validation-status invalid';
+    }
 }
 
 // ========================================
@@ -313,14 +408,17 @@ function validateForm() {
 // ========================================
 
 /**
- * Generate a unique certificate ID
- * Format: AIS-YYYY-XXXX
- * @returns {string} - Generated certificate ID
+ * Generate a unique certificate serial number
+ * Format: AIS/YYYY/MMDD/XXXX
+ * @returns {string} - Generated serial number
  */
 function generateCertificateId() {
-    const year = new Date().getFullYear();
-    const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
-    return `AIS-${year}-${randomNum}`;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const randomNum = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit random
+    return `AIS/${year}/${month}${day}/${randomNum}`;
 }
 
 // ========================================
@@ -339,9 +437,16 @@ function handleFormSubmit(event) {
         return;
     }
     
+    // Validate participant name against CSV list
+    const participantName = elements.participantName.value.trim();
+    if (!isParticipantValid(participantName)) {
+        showParticipantError('Your name was not found because you haven\'t filled the registration form.');
+        return;
+    }
+    
     // Gather form data - using JSON template
     const formData = {
-        participantName: elements.participantName.value.trim(),
+        participantName: participantName,
         eventName: elements.eventName.value.trim(),
         eventDate: formatDate(elements.eventDate.value),
         certificateId: generateCertificateId()
@@ -349,6 +454,46 @@ function handleFormSubmit(event) {
     
     // Generate certificate
     generateCertificate(formData);
+}
+
+/**
+ * Check if participant name exists in the CSV list
+ * @param {string} name - Participant name to validate
+ * @returns {boolean} - Whether the participant is valid
+ */
+function isParticipantValid(name) {
+    if (participantsList.length === 0) {
+        console.warn('Participants list not loaded yet');
+        return true; // Allow if list not loaded (fallback)
+    }
+    const normalizedName = name.trim().toLowerCase();
+    return participantsList.some(participant => 
+        participant === normalizedName || 
+        participant.includes(normalizedName) || 
+        normalizedName.includes(participant)
+    );
+}
+
+/**
+ * Show error message for invalid participant
+ * @param {string} message - Error message to display
+ */
+function showParticipantError(message) {
+    const errorElement = document.getElementById('participantNameError');
+    const validationStatus = document.getElementById('validationStatus');
+    
+    elements.participantName.classList.add('error');
+    if (errorElement) {
+        errorElement.textContent = message;
+    }
+    if (validationStatus) {
+        validationStatus.textContent = '❌ Not registered';
+        validationStatus.className = 'validation-status invalid';
+    }
+    
+    // Shake animation
+    elements.participantName.parentElement.classList.add('shake');
+    setTimeout(() => elements.participantName.parentElement.classList.remove('shake'), 300);
 }
 
 /**
@@ -420,6 +565,14 @@ function renderDynamicText(data) {
         CONFIG.textPositions.eventLine2,
         CONFIG.fonts.eventDetails,
         'center'
+    );
+    
+    // Serial Number - Bottom right corner for professional credibility
+    drawText(
+        `Serial No: ${data.certificateId}`,
+        CONFIG.textPositions.serialNumber,
+        CONFIG.fonts.serialNumber,
+        'right'
     );
 }
 

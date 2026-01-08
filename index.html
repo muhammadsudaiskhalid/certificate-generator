@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <!-- jsPDF Library from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -36,8 +38,9 @@
                     <!-- Participant Name -->
                     <div class="form-group">
                         <label for="participantName">Participant Name <span class="required">*</span></label>
-                        <input type="text" id="participantName" name="participantName" placeholder="Enter full name" required>
+                        <input type="text" id="participantName" name="participantName" placeholder="Enter your registered name" required autocomplete="off">
                         <span class="error-message" id="participantNameError"></span>
+                        <span class="validation-status" id="validationStatus"></span>
                     </div>
 
                     <!-- Event Name -->
