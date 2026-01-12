@@ -23,34 +23,25 @@ const CONFIG = {
     
     // Text positioning coordinates (x, y) - Adjusted for the actual template
     textPositions: {
-        // Participant name - BOLD, ABOVE the decorative line
+        // Participant name - centered, moved lower
         participantName: {
-            x: 1754,  // Center
-            y: 1300   // Moved lower
+            x: 840,  // Center
+            y: 1200   // Little above
         },
-        // Event details text - BELOW the line
-        eventLine1: {
-            x: 1754,
-            y: 1480   // Moved lower
-        },
-        eventLine2: {
-            x: 1754,
-            y: 1570   // Moved lower
-        },
-        // Serial number - Bottom right corner
+        // Serial number - Right side, 5px from bottom
         serialNumber: {
-            x: 3350,
-            y: 2380
+            x: 3355,
+            y: 2450
         }
     },
     
     // Font configurations
     fonts: {
         participantName: {
-            size: 90,
-            weight: 'bold',
-            family: 'Georgia, serif',
-            color: '#1e3a5f'  // Navy Blue - Bold
+            size: 160,
+            weight: 'normal',
+            family: '"Citadel Script", "Great Vibes", cursive',
+            color: '#1e3a5f'  // Blue like logo
         },
         eventDetails: {
             size: 48,
@@ -117,7 +108,7 @@ const CONFIG = {
             size: 32,
             weight: 'bold',
             family: 'Consolas, Courier New, monospace',
-            color: '#1e3a5f'
+            color: '#ffffff'
         }
     },
     
@@ -149,13 +140,14 @@ const elements = {
     form: document.getElementById('certificateForm'),
     canvas: document.getElementById('certificateCanvas'),
     participantName: document.getElementById('participantName'),
-    eventName: document.getElementById('eventName'),
-    eventDate: document.getElementById('eventDate'),
     generateBtn: document.getElementById('generateBtn'),
     downloadPdfBtn: document.getElementById('downloadPdfBtn'),
     printBtn: document.getElementById('printBtn'),
     placeholderMessage: document.getElementById('placeholderMessage'),
-    canvasWrapper: document.querySelector('.canvas-wrapper')
+    canvasWrapper: document.querySelector('.canvas-wrapper'),
+    participantInfo: document.getElementById('participantInfo'),
+    serialNoDisplay: document.getElementById('serialNoDisplay'),
+    statusDisplay: document.getElementById('statusDisplay')
 };
 
 // Canvas 2D context
@@ -166,12 +158,43 @@ let certificateGenerated = false;
 let backgroundImageLoaded = false;
 let backgroundImage = new Image();
 let participantsList = []; // List of valid participants from CSV
+let participantsData = []; // Full participant data with serial numbers
+let currentParticipantSerial = null;
+let fontLoaded = false;
 
 // CSV Configuration
 const CSV_CONFIG = {
     fileName: 'AIS Event Joining Participant.csv',
     nameColumnIndex: 2  // Column C (0-indexed)
 };
+
+// Default Event Configuration (hardcoded since we removed the inputs)
+const EVENT_CONFIG = {
+    eventName: 'AI Workshop',
+    eventDate: 'January 12, 2026'
+};
+
+// ========================================
+// FONT LOADING
+// ========================================
+
+/**
+ * Load the Citadel Script / Great Vibes font for canvas use
+ */
+function loadCustomFont() {
+    // Check if document.fonts API is available
+    if (document.fonts) {
+        document.fonts.ready.then(() => {
+            fontLoaded = true;
+            console.log('Custom fonts loaded successfully');
+        });
+    } else {
+        // Fallback - assume font is loaded after a delay
+        setTimeout(() => {
+            fontLoaded = true;
+        }, 1000);
+    }
+}
 
 // ========================================
 // INITIALIZATION
@@ -188,14 +211,14 @@ function init() {
     // Load background image
     loadBackgroundImage();
     
+    // Load custom fonts
+    loadCustomFont();
+    
     // Load participants list from CSV
     loadParticipantsList();
     
     // Attach event listeners
     attachEventListeners();
-    
-    // Set default date to today
-    setDefaultDate();
 }
 
 /**
@@ -209,10 +232,17 @@ function loadParticipantsList() {
         complete: function(results) {
             if (results.data && results.data.length > 1) {
                 // Skip header row, extract names from column C (index 2)
-                participantsList = results.data
+                // Store both lowercase name and original name with serial number
+                participantsData = results.data
                     .slice(1) // Skip header
-                    .map(row => row[CSV_CONFIG.nameColumnIndex]?.trim().toLowerCase())
-                    .filter(name => name); // Remove empty names
+                    .map((row, index) => ({
+                        serialNo: String(index + 1).padStart(3, '0'),
+                        name: row[CSV_CONFIG.nameColumnIndex]?.trim() || '',
+                        nameLower: row[CSV_CONFIG.nameColumnIndex]?.trim().toLowerCase() || ''
+                    }))
+                    .filter(p => p.name); // Remove empty names
+                
+                participantsList = participantsData.map(p => p.nameLower);
                 console.log(`Loaded ${participantsList.length} participants from CSV`);
             }
         },
@@ -237,14 +267,6 @@ function loadBackgroundImage() {
     };
     
     backgroundImage.src = CONFIG.backgroundImage;
-}
-
-/**
- * Set default date to today
- */
-function setDefaultDate() {
-    const today = new Date().toISOString().split('T')[0];
-    elements.eventDate.value = today;
 }
 
 /**
@@ -459,24 +481,66 @@ function validateParticipantName() {
     if (name.length < 3) {
         validationStatus.textContent = '';
         validationStatus.className = 'validation-status';
+        hideParticipantInfo();
         return;
     }
     
-    if (participantsList.length === 0) {
+    if (participantsData.length === 0) {
         validationStatus.textContent = '⏳ Loading participant list...';
         validationStatus.className = 'validation-status loading';
         return;
     }
     
-    if (isParticipantValid(name)) {
+    const participantData = findParticipant(name);
+    if (participantData) {
         validationStatus.textContent = '✓ Registered participant';
         validationStatus.className = 'validation-status valid';
         elements.participantName.classList.remove('error');
         document.getElementById('participantNameError').textContent = '';
+        showParticipantInfo(participantData);
     } else {
         validationStatus.textContent = '✗ Not registered - Please fill the registration form first';
         validationStatus.className = 'validation-status invalid';
+        hideParticipantInfo();
     }
+}
+
+/**
+ * Find participant in data by name
+ * @param {string} name - Name to search
+ * @returns {Object|null} - Participant data or null
+ */
+function findParticipant(name) {
+    const normalizedName = name.trim().toLowerCase();
+    return participantsData.find(p => 
+        p.nameLower === normalizedName || 
+        p.nameLower.includes(normalizedName) || 
+        normalizedName.includes(p.nameLower)
+    );
+}
+
+/**
+ * Show participant info panel
+ * @param {Object} participant - Participant data
+ */
+function showParticipantInfo(participant) {
+    if (elements.participantInfo) {
+        elements.participantInfo.style.display = 'block';
+        if (elements.serialNoDisplay) {
+            elements.serialNoDisplay.textContent = `AIS-2026-${participant.serialNo}`;
+        }
+        currentParticipantSerial = participant.serialNo;
+    }
+}
+
+/**
+ * Hide participant info panel
+ */
+function hideParticipantInfo() {
+    if (elements.participantInfo) {
+        elements.participantInfo.style.display = 'none';
+    }
+    currentParticipantSerial = null;
 }
 
 // ========================================
@@ -540,9 +604,7 @@ function clearFieldError(field) {
  */
 function getFieldLabel(fieldName) {
     const labels = {
-        participantName: 'Participant Name',
-        eventName: 'Event Name',
-        eventDate: 'Date'
+        participantName: 'Your Name'
     };
     return labels[fieldName] || fieldName;
 }
@@ -570,16 +632,13 @@ function validateForm() {
 
 /**
  * Generate a unique certificate serial number
- * Format: AIS/YYYY/MMDD/XXXX
+ * Format: AIS-YYYY-XXX (based on participant's position in list)
+ * @param {string} serialNo - Participant's serial number from CSV
  * @returns {string} - Generated serial number
  */
-function generateCertificateId() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const randomNum = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit random
-    return `AIS/${year}/${month}${day}/${randomNum}`;
+function generateCertificateId(serialNo) {
+    const year = new Date().getFullYear();
+    return `AIS-${year}-${serialNo}`;
 }
 
 // ========================================
@@ -600,17 +659,19 @@ function handleFormSubmit(event) {
     
     // Validate participant name against CSV list
     const participantName = elements.participantName.value.trim();
-    if (!isParticipantValid(participantName)) {
-        showParticipantError('Your name was not found because you haven\'t filled the registration form.');
+    const participantData = findParticipant(participantName);
+    
+    if (!participantData) {
+        showParticipantError('Your name was not found. Please fill the registration form first.');
         return;
     }
     
-    // Gather form data - using JSON template
+    // Gather form data - using stored participant data
     const formData = {
-        participantName: participantName,
-        eventName: elements.eventName.value.trim(),
-        eventDate: formatDate(elements.eventDate.value),
-        certificateId: generateCertificateId()
+        participantName: capitalizeWords(participantData.name),
+        eventName: EVENT_CONFIG.eventName,
+        eventDate: EVENT_CONFIG.eventDate,
+        certificateId: generateCertificateId(participantData.serialNo)
     };
     
     // Generate certificate
@@ -702,33 +763,15 @@ function generateCertificate(data) {
  * @param {Object} data - Certificate data
  */
 function renderDynamicText(data) {
-    // Participant Name - BOLD, above the existing line in template
+    // Participant Name - starts from left at x: 1254
     drawText(
         data.participantName,
         CONFIG.textPositions.participantName,
         CONFIG.fonts.participantName,
-        'center'
+        'left'
     );
     
-    // Event details line 1: For participating in the event "[Event name]"
-    const eventLine1 = `For participating in the event "${data.eventName}"`;
-    drawText(
-        eventLine1,
-        CONFIG.textPositions.eventLine1,
-        CONFIG.fonts.eventDetails,
-        'center'
-    );
-    
-    // Event details line 2: Hosted by AI Innovation Society of the Department of Artificial Intelligence (STMU), on [Date]
-    const eventLine2 = `Hosted by AI Innovation Society of the Department of Artificial Intelligence (STMU), on ${data.eventDate}`;
-    drawText(
-        eventLine2,
-        CONFIG.textPositions.eventLine2,
-        CONFIG.fonts.eventDetails,
-        'center'
-    );
-    
-    // Serial Number - Bottom right corner for professional credibility
+    // Serial Number - Right side
     drawText(
         `Serial No: ${data.certificateId}`,
         CONFIG.textPositions.serialNumber,

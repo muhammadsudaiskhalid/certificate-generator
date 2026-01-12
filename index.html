@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Innovation Society — Certificate Generator</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Font - Citadel Script alternative (Great Vibes is a beautiful script font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     <!-- jsPDF Library from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- PapaParse for CSV parsing -->
@@ -33,29 +37,27 @@
         <main class="main-content">
             <!-- Input Form Section -->
             <section class="form-section">
-                <h2>Certificate Details</h2>
+                <h2>Certificate Generator</h2>
                 <form id="certificateForm" novalidate>
                     <!-- Participant Name -->
                     <div class="form-group name-input-wrapper">
-                        <label for="participantName">Participant Name <span class="required">*</span></label>
-                        <input type="text" id="participantName" name="participantName" placeholder="Start typing your registered name..." required autocomplete="off">
+                        <label for="participantName">Enter Your Name <span class="required">*</span></label>
+                        <input type="text" id="participantName" name="participantName" placeholder="Type your registered name..." required autocomplete="off">
                         <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
                         <span class="error-message" id="participantNameError"></span>
                         <span class="validation-status" id="validationStatus"></span>
                     </div>
 
-                    <!-- Event Name -->
-                    <div class="form-group">
-                        <label for="eventName">Event Name <span class="required">*</span></label>
-                        <input type="text" id="eventName" name="eventName" placeholder="Enter event name" required>
-                        <span class="error-message" id="eventNameError"></span>
-                    </div>
-
-                    <!-- Date -->
-                    <div class="form-group">
-                        <label for="eventDate">Date <span class="required">*</span></label>
-                        <input type="date" id="eventDate" name="eventDate" required>
-                        <span class="error-message" id="eventDateError"></span>
+                    <!-- Participant Info Display -->
+                    <div class="participant-info" id="participantInfo">
+                        <div class="info-item">
+                            <span class="info-label">Serial No:</span>
+                            <span class="info-value" id="serialNoDisplay">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value status-verified" id="statusDisplay">✓ Verified</span>
+                        </div>
                     </div>
 
                     <!-- Generate Button -->
