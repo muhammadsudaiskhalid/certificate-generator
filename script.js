@@ -129,7 +129,7 @@ const CONFIG = {
     ],
     
     // Background template image (the actual certificate template)
-    backgroundImage: 'Participation Certificate.png'
+    backgroundImage: 'Participation%20Certificate.png'
 };
 
 // ========================================
@@ -164,7 +164,7 @@ let fontLoaded = false;
 
 // CSV Configuration
 const CSV_CONFIG = {
-    fileName: 'AIS Event Joining Participant.csv',
+    fileName: 'AIS%20Event%20Joining%20Participant.csv',
     nameColumnIndex: 2  // Column C (0-indexed)
 };
 
@@ -225,11 +225,13 @@ function init() {
  * Load participants list from CSV file
  */
 function loadParticipantsList() {
+    console.log('Loading CSV from:', CSV_CONFIG.fileName);
     Papa.parse(CSV_CONFIG.fileName, {
         download: true,
         header: false,
         skipEmptyLines: true,
         complete: function(results) {
+            console.log('CSV loaded, rows:', results.data ? results.data.length : 0);
             if (results.data && results.data.length > 1) {
                 // Skip header row, extract names from column C (index 2)
                 // Store both lowercase name and original name with serial number
@@ -244,10 +246,13 @@ function loadParticipantsList() {
                 
                 participantsList = participantsData.map(p => p.nameLower);
                 console.log(`Loaded ${participantsList.length} participants from CSV`);
+            } else {
+                console.warn('CSV file is empty or has no data rows');
             }
         },
         error: function(error) {
             console.error('Error loading participants CSV:', error);
+            alert('Could not load participant list. Please check if the CSV file exists.');
         }
     });
 }
