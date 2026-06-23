@@ -25,8 +25,8 @@ const CONFIG = {
     textPositions: {
         // Participant name - centered, moved lower
         participantName: {
-            x: 840,  // Center
-            y: 1200   // Little above
+            x: 1300,  // Center
+            y: 1180   // Little above
         },
         // Serial number - Right side, 5px from bottom
         serialNumber: {
@@ -40,7 +40,7 @@ const CONFIG = {
         participantName: {
             size: 160,
             weight: 'normal',
-            family: '"Citadel Script", "Great Vibes", cursive',
+            family: '"Great Vibes", cursive',
             color: '#1e3a5f'  // Blue like logo
         },
         eventDetails: {
@@ -108,7 +108,7 @@ const CONFIG = {
             size: 32,
             weight: 'bold',
             family: 'Consolas, Courier New, monospace',
-            color: '#ffffff'
+            color: '#032bf0'
         }
     },
     
@@ -129,7 +129,7 @@ const CONFIG = {
     ],
     
     // Background template image (the actual certificate template)
-    backgroundImage: 'Participation%20Certificate.png'
+    backgroundImage: 'iieq-certificate.png'
 };
 
 // ========================================
