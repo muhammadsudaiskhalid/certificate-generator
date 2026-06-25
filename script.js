@@ -108,7 +108,7 @@ const CONFIG = {
         }
     ],
 
-    backgroundImage: 'iieq-certificate.png'
+    backgroundImage: 'iieq-certificat.png'
 };
 
 // ========================================
