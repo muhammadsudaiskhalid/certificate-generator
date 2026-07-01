@@ -16,7 +16,7 @@ const CONFIG = {
     textPositions: {
         participantName: {
             x: 1754,
-            y: 1180
+            y: 1100
         },
         serialNumber: {
             x: 3355,
@@ -108,7 +108,7 @@ const CONFIG = {
         }
     ],
 
-    backgroundImage: 'iieq-certificat.png'
+    backgroundImage: 'robotics-certificate.png'
 };
 
 // ========================================
